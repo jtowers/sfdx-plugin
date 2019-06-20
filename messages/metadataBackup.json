@@ -1,0 +1,8 @@
+{
+    "commandDescription": "Back up metadata to a specified directory",
+    "retrieveTargetDirFlagDescription": "directory to save backed up metadata to",
+    "targetMetadataTypesFlagDescription": "types of metadata to retrieve for backup",
+    "excludedMetadataTypesFlagDescription": "types of metadata to exclude from backup",
+    "errorNoOrgResults": "No results found for the org '%s'."
+  }
+  
