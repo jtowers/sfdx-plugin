@@ -22,7 +22,7 @@ You can check a successful installation with `sfdx plugins`. Updates are applied
 ## sfdx jtowers:metadata:backup
 Retrieves some or all metadata from the target org and zips it in the provided location
 
-```
+```sh-session
 USAGE
   $ sfdx jtowers:backup:metadata -r <directory> [-t <string>] [-e <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
