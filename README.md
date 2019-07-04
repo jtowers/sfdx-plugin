@@ -43,4 +43,3 @@ EXAMPLE
   $ sfdx jtowers:backup:metadata --targetusername myOrg@example.com --retrievetargetdir backups -t ApexClass ApexTrigger
   Retrieving backup from server... Backup retrieved
 ```
-

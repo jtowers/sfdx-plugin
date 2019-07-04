@@ -1,9 +1,8 @@
-import { Connection, AsyncResult, DescribeMetadataResult, ListMetadataQuery, FileProperties, RetrieveRequest } from "jsforce";
+import { Connection,  DescribeMetadataResult, ListMetadataQuery, FileProperties, RetrieveRequest} from "jsforce";
 import { PackageFormatter } from "./packageFormatter";
-
+import * as fs from 'fs';
 export class MetadataRetriever {
     private _conn : Connection;
-    private _id : string;
     private _apiVersion: string;
     private _orgMetadata : DescribeMetadataResult;
     private _maxListQueries : number = 3;
@@ -16,35 +15,17 @@ export class MetadataRetriever {
         this._apiVersion = apiVersion;
     }
 
-  
-    public async retrievePackage(packageObj) : Promise<string>
-    {
-      
-            let asyncResult : AsyncResult = await this.startPackageRetrieve(packageObj);
-            this._id = asyncResult.id;
-            var self = this;
-            return new Promise((resolve, reject) => {
-                (function waitForRetrieve(){
-                    self._conn.metadata.checkRetrieveStatus(self._id).then(result => {
-                        if(result.done !== 'false'){
-                            return resolve(result.zipFile);
-                        }
-                        setTimeout(() => {
-                            waitForRetrieve();
-                        }, 1000);
-                    })
-                })();
-            });
-    }
 
-    public async performBackup(targetTypes: string[], excludedTypes : string[]) : Promise<string>
+    public async performBackup(targetTypes: string[], excludedTypes : string[], fileName : string) : Promise<void>
     {
      
         this._targetTypes = await this.retrieveMetadataTypes(targetTypes, excludedTypes);
         let orgMetadata : FileProperties[] = await this.listOrgMetadata(this._targetTypes);
         let packageFormatter : PackageFormatter = new PackageFormatter(orgMetadata, this._apiVersion);
         let retrieveRequest : RetrieveRequest = packageFormatter.createPackageObject();
-        return this.retrievePackage(retrieveRequest);
+        let retrieveresult = this._conn.metadata.retrieve(retrieveRequest, null);
+        // @ts-ignore
+        retrieveresult.stream().pipe(fs.createWriteStream(fileName));
     }
 
     public async retrieveMetadataTypes(targetTypes : string[], excludedTypes : string[]) : Promise<string[]>
@@ -157,19 +138,6 @@ export class MetadataRetriever {
           return targetTypes;
     }
     
-    private async startPackageRetrieve(packageObj) : Promise<AsyncResult> 
-    {
-        return new Promise((resolve, reject) => {
-            this._conn.metadata.retrieve(packageObj, function(err, result : AsyncResult){
-                if(err){
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            })
-        });
-    }
-
     private async getOrgMetadata() : Promise<DescribeMetadataResult>
     {
         if(typeof this._orgMetadata == 'undefined'){

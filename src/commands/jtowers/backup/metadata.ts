@@ -1,5 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError } from '@salesforce/core';
+import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 import { MetadataRetriever } from '../../../lib/metadataRetriever';
 import * as fs from "fs";
@@ -19,7 +19,11 @@ export default class Backup extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    `$ sfdx jtowers:backup:metadata --targetusername myOrg@example.com --retrievetargetdir backups --wait 10`
+  `$ sfdx jtowers:backup:metadata --targetusername myOrg@example.com --retrievetargetdir backups 
+  Retrieving backup from server... Backup retrieved`,
+
+  `$ sfdx jtowers:backup:metadata --targetusername myOrg@example.com --retrievetargetdir backups -t ApexClass ApexTrigger
+  Retrieving backup from server... Backup retrieved`
   ];
 
   public static args = [{ name: 'file' }];
@@ -47,18 +51,16 @@ export default class Backup extends SfdxCommand {
 
    
   let retriever : MetadataRetriever = new MetadataRetriever(conn, apiVersion);
-  this.ux.startSpinner("Retrieving backup from server");
-  let zipFile = await retriever.performBackup(targetTypes, excludedTypes);
-  this.ux.stopSpinner("Backup retrieved");
-  if(zipFile){
-    if(!fs.existsSync(directory)){
-     await fs.mkdirSync(directory);
-    }
-    let name = `backup_${this.org.getUsername()}_${moment().format('YYYY-MM-DDTX')}`;
-    let fileName = path.join(directory, `${name}.zip`);
+  if(!fs.existsSync(directory)){
+    await fs.mkdirSync(directory);
+   }
+   let name = `backup_${this.org.getUsername()}_${moment().format('YYYY-MM-DDTX')}`;
+   let fileName = path.join(directory, `${name}.zip`);
 
-    fs.writeFileSync(fileName, Buffer.from(zipFile, 'base64'), {flag: 'wx'});
-  }
+  this.ux.startSpinner("Retrieving backup from server");
+  await retriever.performBackup(targetTypes, excludedTypes, fileName);
+  this.ux.stopSpinner("Backup retrieved");
+
     return {retrievedTypes : retriever.targetTypes};
   }
 
